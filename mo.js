@@ -12,80 +12,25 @@ if(!String.prototype.includes) {
 	}
 }
 
-function moSnap(mo, x) {/*
+function moTransform(mo, zm, pt, tr, sn) {
 	if(mo === undefined) {return}
-	if(x === false) {
-		mo.cont.style.transition = "all " + mo.zspeed;
-		console.log(mo.cont.style.transition);
-		//mo.cont.style.transitionDuration = mo.zspeed
-	}
-	let xh = Number(getComputedStyle(mo.media).height.replace("px", "")) * mo.scale;
-	let xw = Number(getComputedStyle(mo.media).width.replace("px", "")) * mo.scale;
-	let yh = Number(getComputedStyle(mo.mo).height.replace("px", ""));
-	let yw = Number(getComputedStyle(mo.mo).width.replace("px", ""));
-	console.log("xh: " + xh + " & xw: " + xw);
-	console.log("yh: " + yh + " & yw: " + yw);
-	if(xh <= yh && xw <= yw) {
-		//mo.cont.style.top = "0px";
-		//mo.cont.style.left = "0px";
-		mo.cont.style.removeProperty("top");
-		mo.cont.style.removeProperty("left");
-	}
-*/}
-
-function moDrag(mo) {/*
-	if(mo === undefined) {return}
-	let pos1 = 0, pos2 = 0, pos3 = 0, pos4 = 0;
-	mo.cont.addEventListener("pointerdown", moDragDown);
-	//
-	function moDragDown(ev) {
-		ev = ev || window.event;
-		ev.preventDefault();
-		pos3 = ev.clientX;
-		pos4 = ev.clientY;
-		document.onpointerup = moDragUp;
-		document.onpointermove = moDragMove;
-	}
-	//
-	function moDragMove(ev) {
-		ev = ev || window.event;
-		ev.preventDefault();
-		pos1 = pos3 - ev.clientX;
-		pos2 = pos4 - ev.clientY;
-		pos3 = ev.clientX;
-		pos4 = ev.clientY;
-		mo.cont.style.top = (mo.cont.offsetTop - pos2) + "px";
-		mo.cont.style.left = (mo.cont.offsetLeft - pos1) + "px"
-	}
-	//
-	function moDragUp(ev) {
-		moSnap(mo, true);
-		document.onpointerup = null;
-		document.onpointermove = null
-	}
-*/}
-
-function moTransform(mo, zm, pt, tr) {
-	if(mo === undefined) {return}
-	let sc = -1;
-	if(zm === undefined) {
-		zm = (mo.scale - mo.scales[0]) / (mo.scales[mo.scales.length - 1] - mo.scales[0]); tr = true}
-	else if(tr === undefined) {tr = false}
 	// scale
+	let sc = mo.scale;
+	if(zm === undefined) {
+		zm = (mo.scale - mo.scales[0]) / (mo.scales[mo.scales.length - 1] - mo.scales[0])}
 	if(!isNaN(zm)) {
 		zm = Number(zm);
-		sc = ((mo.scales[mo.scales.length - 1] - mo.scales[0]) * zm) + mo.scales[0]
-	}
+		sc = ((mo.scales[mo.scales.length - 1] - mo.scales[0]) * zm) + mo.scales[0]}
 	else {
 		let prev = mo.scales[0], next = mo.scales[mo.scales.length - 1];
-		mo.scales.every((x, i) => {
-			if(x < mo.scale) {return true}
-			else if(x > mo.scale) {
+		mo.scales.every((s, i) => {
+			if(s < mo.scale) {return true}
+			else if(s > mo.scale) {
 				if(i - 1 > 0) {prev = mo.scales[i - 1]}
 				if(i < mo.scales.length - 1) {next = mo.scales[i]}
 				return false
 			}
-			else if(x == mo.scale) {
+			else if(s == mo.scale) {
 				if(i - 1 > 0) {prev = mo.scales[i - 1]}
 				if(i + 1 < mo.scales.length - 1) {next = mo.scales[i + 1]}
 				return false
@@ -98,35 +43,133 @@ function moTransform(mo, zm, pt, tr) {
 	}
 	if(sc < mo.scales[0]) {sc = mo.scales[0]}
 	else if(sc > mo.scales[mo.scales.length - 1]) {sc = mo.scales[mo.scales.length - 1]}
-	// center
-	let a = mo.viewport.getBoundingClientRect(), b = [a.width, a.height], c = [a.width / 2, a.height / 2];
-	if(Array.isArray(pt)) {
+	// translate
+	let vp = mo.viewport.getBoundingClientRect(), cn = [vp.width / 2, vp.height / 2];
+	if(Array.isArray(pt) && pt.length >= 2) {
 		if(Array.isArray(pt[0]) && Array.isArray(pt[1])) {
-			pt = [(pt[0][0] - pt[1][0]) / 2 + pt[1][0], (pt[0][1] - pt[1][1]) / 2 + pt[1][1]]
-		}
-		pt.forEach((x, i) => {pt[i] = Math.round((pt[i] / b[i]) * 100)});
+			pt = [
+				(pt[0][0] - pt[1][0]) / 2 + pt[1][0],
+				(pt[0][1] - pt[1][1]) / 2 + pt[1][1]
+			]}
+		pt.forEach((p, i) => {pt[i] = Math.round(pt[i] - cn[i])})
 	}
 	else {pt = mo.center}
+	// snap
+	if(sn !== false) {
+		let me = mo.media.getBoundingClientRect(), co = mo.cont.getBoundingClientRect();
+		let ogpt = [pt[0] + cn[0], pt[1] + cn[1]], scme = [(me.width / mo.scale) * sc, (me.height / mo.scale) * sc];
+		if(scme[0] <= vp.width) {pt[0] = 0}
+		else if(ogpt[0] - (scme[0] / 2) > vp.left) {
+			pt[0] = cn[0] + Math.abs((cn[0] * sc) - cn[0]) - Math.abs(co.left - me.left) - cn[0]}
+		else if(ogpt[0] + (scme[0] / 2) < vp.right) {
+			pt[0] = cn[0] - Math.abs((cn[0] * sc) - cn[0]) + Math.abs(co.right - me.right) - cn[0]}
+		if(scme[1] <= vp.height) {pt[1] = 0}
+		else if(ogpt[1] - (scme[1] / 2) > vp.top) {
+			pt[1] = cn[1] + Math.abs((cn[1] * sc) - cn[1]) - Math.abs(co.top - me.top) - cn[1]}
+		else if(ogpt[1] + (scme[1] / 2) < vp.bottom) {
+			pt[1] = cn[1] - Math.abs((cn[1] * sc) - cn[1]) + Math.abs(co.bottom - me.bottom) - cn[1]}
+	}
 	// transform
-	if(tr) {
+	if(tr !== false) {
 		mo.cont.style.transitionDuration = mo.zspeed;
 		mo.controls.sliders.forEach(sl => {
-			sl.value = (sc - mo.scales[0]) / (mo.scales[mo.scales.length - 1] - mo.scales[0])})
+			sl.value = (sc - mo.scales[0]) / (mo.scales[mo.scales.length - 1] - mo.scales[0])});
 	}
-	mo.cont.style.transformOrigin = "" + pt[0] + "% " + pt[1] + "%";
-	mo.cont.style.transform = "scale(" + sc + ")";
+	mo.cont.style.transform = "translate(" + pt[0] + "px, " + pt[1] + "px) scale(" + sc + ")";
 	mo.center = pt; mo.scale = sc;
-	setTimeout(() => {mo.cont.style.removeProperty("transitionDuration")}, mo.zspeed)
+	setTimeout(() => {mo.cont.style.removeProperty("transition")}, mo.zspeed)
 }
 
-function moGestureSetup(mo) {
+function moGestures(mo) {
 	if(mo === undefined) {return}
+	// mouse
+	let pt = [0, 0], pt0 = [0, 0], vp;
+	mo.cont.addEventListener("mousedown", (ev) => {
+		// drag
+		vp = mo.viewport.getBoundingClientRect();
+		vp = [vp.width / 2, vp.height / 2];
+		pt0[0] = ev.clientX;
+		pt0[1] = ev.clientY;
+		mo.cont.addEventListener("mousemove", dragMove);
+		mo.cont.addEventListener("mouseup", dragEnd);
+		mo.cont.addEventListener("mouseout", dragEnd);
+		ev.preventDefault()
+	});
+	// touch
+	mo.cont.addEventListener("touchstart", (ev) => {
+		// pinch
+		if(ev.targetTouches.length == 2) {
+			ev.preventDefault();
+			for(let i = 0; i < ev.targetTouches.length; i++) {
+				mo.evcache.push(ev.targetTouches[i])}
+			mo.cont.removeEventListener("mousemove", dragMove);
+			mo.cont.removeEventListener("mouseup", dragEnd);
+			mo.cont.removeEventListener("mouseout", dragEnd)
+		}
+		// drag
+		else if(ev.targetTouches.length == 1) {
+			vp = mo.viewport.getBoundingClientRect();
+			vp = [vp.width / 2, vp.height / 2];
+			pt0[0] = ev.targetTouches[0].clientX;
+			pt0[1] = ev.targetTouches[0].clientY;
+			mo.cont.addEventListener("touchmove", dragMove);
+			mo.cont.addEventListener("touchend", dragEnd);
+			mo.cont.addEventListener("touchcancel", dragEnd)
+		}
+	});
+	mo.cont.addEventListener("touchmove", (ev) => {
+		if(mo.throttle.active !== true && ev.targetTouches.length == 2) {
+			ev.preventDefault();
+			mo.throttle.active = true;
+			let ppt1 = -1, ppt2 = -1;
+			mo.evcache.forEach((p, i) => {
+				if(p.identifier == ev.targetTouches[0].identifier) {ppt1 = i}
+				if(p.identifier == ev.targetTouches[1].identifier) {ppt2 = i}
+			});
+			if(ppt1 >= 0 && ppt2 >= 0) {
+				let d1 = Math.abs(mo.evcache[ppt1].clientX - mo.evcache[ppt2].clientX);
+				let d2 = Math.abs(ev.targetTouches[0].clientX - ev.targetTouches[1].clientX);
+				if(d2 > d1) {moTransform(mo, "+", [
+						[ev.targetTouches[0].clientX, ev.targetTouches[0].clientY],
+						[ev.targetTouches[1].clientX, ev.targetTouches[1].clientY]])}
+				else if(d2 < d1) {moTransform(mo, "-")}
+				mo.evcache[ppt1] = ev.targetTouches[0];
+				mo.evcache[ppt2] = ev.targetTouches[1];
+				setTimeout(() => {mo.throttle.active = false}, mo.throttle.touch)
+			}
+			else {mo.evcache = []}
+		}
+	});
+	mo.cont.addEventListener("touchend", tPinchEnd);
+	mo.cont.addEventListener("touchcancel", tPinchEnd);
+	// drag // pinch
+	function dragMove(ev) {
+		ev.preventDefault(); let int = ev;
+		if(ev.type == "touchmove") {int = ev.targetTouches[0]}
+		pt[0] = mo.center[0] + (int.clientX - pt0[0]) + vp[0];
+		pt[1] = mo.center[1] + (int.clientY - pt0[1]) + vp[1];
+		pt0[0] = int.clientX; pt0[1] = int.clientY;
+		moTransform(mo, undefined, pt, false, false);
+	}
+	function dragEnd(ev) {
+		moTransform(mo);
+		let ev1 = "touchmove", ev2 = "touchend", ev3 = "touchcancel";
+		if(ev.type == "mouseup" || ev.type == "mouseout") {
+			ev1 = "mousemove"; ev2 = "mouseup"; ev3 = "mouseout"}
+		mo.cont.removeEventListener(ev1, dragMove);
+		mo.cont.removeEventListener(ev2, dragEnd);
+		mo.cont.removeEventListener(ev3, dragEnd)
+	}
+	function tPinchEnd(ev) {
+		if(mo.evcache[0] != undefined) {mo.evcache.forEach((p, i) => {
+			if(p.identifier == ev.identifier) {mo.evcache.splice(i, 1)}})}
+	}
 	// scroll
 	mo.cont.addEventListener("wheel", (ev) => {
 		if(mo.throttle.active !== true) {
 			mo.throttle.active = true;
-			if(ev.deltaY > 0) {moTransform(mo, "-", undefined, true)}
-			if(ev.deltaY < 0) {moTransform(mo, "+", [ev.clientX, ev.clientY], true)}
+			if(ev.deltaY > 0) {moTransform(mo, "-")}
+			if(ev.deltaY < 0) {moTransform(mo, "+")}
 			setTimeout(() => {mo.throttle.active = false}, mo.throttle.scroll)
 		}
 		ev.preventDefault()
@@ -136,53 +179,13 @@ function moGestureSetup(mo) {
 	mo.cont.addEventListener("gesturechange", (ev) => {
 		if(mo.throttle.active !== true) {
 			mo.throttle.active = true;
-			if(ev.scale > 1) {moTransform(mo, "+", [ev.clientX, ev.clientY], true)}
 			if(ev.scale < 1) {moTransform(mo, "-", undefined, true)}
+			if(ev.scale > 1) {moTransform(mo, "+", undefined, true)}
 			setTimeout(() => {mo.throttle.active = false}, mo.throttle.gesture)
 		}
 		ev.preventDefault()
 	});
 	mo.cont.addEventListener("gestureend", (ev) => {ev.preventDefault()});
-	// touch
-	mo.cont.addEventListener("touchstart", (ev) => {
-		if(ev.targetTouches.length == 2) {
-			ev.preventDefault();
-			for(let i = 0; i < ev.targetTouches.length; i++) {
-				mo.evcache.push(ev.targetTouches[i])
-			}
-		}
-	});
-	mo.cont.addEventListener("touchmove", (ev) => {
-		if(mo.throttle.active !== true && ev.targetTouches.length == 2 && ev.changedTouches.length == 2) {
-			ev.preventDefault();
-			let pt1 = -1, pt2 = -1;
-			mo.evcache.forEach((x, i) => {
-				if(x.identifier == ev.targetTouches[0].identifier) {pt1 = i}
-				if(x.identifier == ev.targetTouches[1].identifier) {pt2 = i}
-			});
-			if(pt1 >= 0 && pt2 >= 0) {
-				let d1 = Math.abs(mo.evcache[pt1].clientX - mo.evcache[pt2].clientX);
-				let d2 = Math.abs(ev.targetTouches[0].clientX - ev.targetTouches[1].clientX);
-				if(d2 > d1) {moTransform(mo, "+", [
-					[ev.targetTouches[0].clientX, ev.targetTouches[0].clientY],
-					[ev.targetTouches[1].clientX, ev.targetTouches[1].clientY]], true)}
-				if(d2 < d1) {moTransform(mo, "-", undefined, true)}
-				mo.evcache[pt1] = ev.targetTouches[0];
-				mo.evcache[pt2] = ev.targetTouches[1];
-				setTimeout(() => {mo.throttle.active = false}, mo.throttle.touch)
-			}
-			else {mo.evcache = []}
-		}
-	});
-	mo.cont.addEventListener("touchend", touchEndHandler);
-	mo.cont.addEventListener("touchcancel", touchEndHandler);
-	//
-	function touchEndHandler(ev) {
-		if(mo.evcache[0] != undefined) {
-			mo.evcache.forEach((x, i) => {
-				if(x.identifier == ev.identifier) {mo.evcache.splice(i, 1)}})
-		}
-	}
 }
 
 function moActions(mo) {
@@ -201,7 +204,7 @@ function moActions(mo) {
 			else if(ac == "minmax") {
 				y.addEventListener(tr, (ev) => {
 					let z = 1; if(mo.scale == mo.scales[mo.scales.length - 1]) {z = 0}
-					moTransform(mo, z, [ev.clientX, ev.clientY], true)
+					moTransform(mo, z)
 				})
 			}
 		}
@@ -224,12 +227,14 @@ function moKeydown(ev) {
 function moUIFade(mo) {
 	if(mo !== undefined && mo.hasOwnProperty("ui")) {
 		mo.ui.t = new Date();
-		mo.mo.addEventListener("pointermove", () => {
+		mo.mo.addEventListener("pointermove", UIFadeIn);
+		mo.mo.addEventListener("touchstart", UIFadeIn);
+		function UIFadeIn() {
 			if(mo.active === true) {
 				mo.ui.t = new Date();
 				mo.ui.els.forEach(el => {el.style.removeProperty("opacity")})
 			}
-		});
+		}
 		setInterval(() => {
 			if(mo.active === true) {
 				let x = new Date();
@@ -259,7 +264,7 @@ for(let i = 0; i < modals.length; i++) {
 		"scale": 0,
 		"scales": [0.9, 1, 1.2, 1.6, 2.2, 3],
 		"defaultscale": 0.9,
-		"center": [50, 50],
+		"center": [0, 0],
 		"zspeed": 200,
 		"throttle": {"scroll": 0, "gesture": 0, "touch": 0, "active": false},
 		"evcache": [],
@@ -321,7 +326,8 @@ moRef.forEach(mo => {
 	}
 	if(mo.mo.querySelector("[data-mo='slider']")) {
 		mo.controls.sliders = moToArray(mo.mo.querySelectorAll("[data-mo='slider']"));
-		mo.controls.sliders.forEach(x => {x.addEventListener("input", () => {moTransform(mo, x.value)})})
+		mo.controls.sliders.forEach(x => {x.addEventListener("input", () => {
+			moTransform(mo, x.value, undefined, false)})})
 	}
 	// keys
 	if(mo.mo.querySelector("[data-mo-key]")) {
@@ -336,9 +342,8 @@ moRef.forEach(mo => {
 	}
 	// setup
 	if(mo.hasOwnProperty("cont")) {
-		moTransform(mo);
-		moGestureSetup(mo);
-		moDrag(mo)
+		moTransform(mo, undefined, undefined, false);
+		moGestures(mo);
 	}
 	if(mo.hasOwnProperty("ui")) {moUIFade(mo)}
 	if(mo.mo.querySelector("[data-mo-action]")) {moActions(mo)}
