@@ -72,9 +72,11 @@ function moTransform(mo, zm, pt, tr, sn) {
 	// transform
 	if(tr !== false) {
 		mo.cont.style.transitionDuration = mo.zspeed;
-		mo.controls.sliders.forEach(sl => {
-			sl.value = (sc - mo.scales[0]) / (mo.scales[mo.scales.length - 1] - mo.scales[0])});
+		//mo.controls.sliders.forEach(sl => {
+		//	sl.value = (sc - mo.scales[0]) / (mo.scales[mo.scales.length - 1] - mo.scales[0])});
 	}
+	mo.controls.sliders.forEach(sl => {
+		sl.value = (sc - mo.scales[0]) / (mo.scales[mo.scales.length - 1] - mo.scales[0])});
 	mo.cont.style.transform = "translate(" + pt[0] + "px, " + pt[1] + "px) scale(" + sc + ")";
 	mo.center = pt; mo.scale = sc;
 	setTimeout(() => {mo.cont.style.removeProperty("transition")}, mo.zspeed)
@@ -283,7 +285,8 @@ moRef.forEach(mo => {
 		let x = mo.mo.getAttribute("data-mo-defaultscale");
 		if(!isNaN(x)) {
 			mo.defaultscale = Number(x);
-			mo.scale = (mo.defaultscale - mo.scales[0]) / (mo.scales[mo.scales.length - 1] - mo.scales[0])
+			//mo.scale = (mo.defaultscale - mo.scales[0]) / (mo.scales[mo.scales.length - 1] - mo.scales[0])
+			mo.scale = mo.defaultscale
 		}
 	}
 	// zoom speed
@@ -342,7 +345,7 @@ moRef.forEach(mo => {
 	}
 	// setup
 	if(mo.hasOwnProperty("cont")) {
-		moTransform(mo, mo.scale, undefined, false);
+		moTransform(mo, undefined, undefined, false);
 		moGestures(mo);
 	}
 	if(mo.hasOwnProperty("ui")) {moUIFade(mo)}
