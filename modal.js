@@ -179,8 +179,8 @@ function moGestures(mo) {
 	mo.cont.addEventListener("gesturechange", (ev) => {
 		if(mo.throttle.active !== true) {
 			mo.throttle.active = true;
-			if(ev.scale < 1) {moTransform(mo, "-", undefined, true)}
-			if(ev.scale > 1) {moTransform(mo, "+", undefined, true)}
+			if(ev.scale < 1) {moTransform(mo, "-")}
+			if(ev.scale > 1) {moTransform(mo, "+")}
 			setTimeout(() => {mo.throttle.active = false}, mo.throttle.gesture)
 		}
 		ev.preventDefault()
@@ -342,7 +342,7 @@ moRef.forEach(mo => {
 	}
 	// setup
 	if(mo.hasOwnProperty("cont")) {
-		moTransform(mo, undefined, undefined, false);
+		moTransform(mo, mo.scale, undefined, false);
 		moGestures(mo);
 	}
 	if(mo.hasOwnProperty("ui")) {moUIFade(mo)}
