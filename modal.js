@@ -234,6 +234,7 @@ function moKeydown(ev) {
 }
 
 function moUIFade(mo) {
+	if(window.innerWidth <= 767) {return}
 	if(mo !== undefined && mo.hasOwnProperty("ui")) {
 		mo.ui.t = new Date();
 		mo.mo.addEventListener("pointermove", UIFadeIn);
