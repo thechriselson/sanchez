@@ -212,8 +212,8 @@ function moActions(mo) {
 			// body scroll
 			else if(ac == "bodyscollstop" || ac == "bodyscrollgo") {
 				y.addEventListener(tr, () => {
-					if(ac.includes("stop")) {document.body.style.overflow = "hidden"}
-					if(ac.includes("go")) {document.body.style.removeProperty("overflow")}
+					if(ac.includes("stop")) {document.body.style.overflowY = "hidden"}
+					if(ac.includes("go")) {document.body.style.removeProperty("overflow-y")}
 				})
 			}
 		}
