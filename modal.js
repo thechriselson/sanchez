@@ -209,6 +209,13 @@ function moActions(mo) {
 					moTransform(mo, z)
 				})
 			}
+			// body scroll
+			else if(ac == "bodyscollstop" || ac == "bodyscrollgo") {
+				y.addEventListener(tr, () => {
+					if(ac.includes("stop")) {document.body.style.overflow = "hidden"}
+					if(ac.includes("go")) {document.body.style.removeProperty("overflow")}
+				})
+			}
 		}
 	})
 }
