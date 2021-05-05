@@ -242,6 +242,7 @@ function moUIFade(mo) {
 		function UIFadeIn() {
 			if(mo.active === true) {
 				mo.ui.t = new Date();
+				document.body.style.removeProperty("cursor");
 				mo.ui.els.forEach(el => {el.style.removeProperty("opacity")})
 			}
 		}
@@ -249,6 +250,7 @@ function moUIFade(mo) {
 			if(mo.active === true) {
 				let x = new Date();
 				if(mo.ui.t.getTime() + 1000 < x.getTime()) {
+					document.body.style.cursor = "none";
 					mo.ui.els.forEach(el => {el.style.opacity = "0"})
 				}
 			}
