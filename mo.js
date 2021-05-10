@@ -237,12 +237,15 @@ function moUIFade(mo) {
 	if(window.innerWidth <= 767) {return}
 	if(mo !== undefined && mo.hasOwnProperty("ui")) {
 		mo.ui.t = new Date();
-		mo.mo.addEventListener("pointermove", UIFadeIn);
-		mo.mo.addEventListener("touchstart", UIFadeIn);
+		//mo.mo.addEventListener("pointermove", UIFadeIn);
+		//mo.mo.addEventListener("touchstart", UIFadeIn);
+		mo.viewport.addEventListener("pointermove", UIFadeIn);
+		mo.viewport.addEventListener("touchstart", UIFadeIn);
 		function UIFadeIn() {
 			if(mo.active === true) {
 				mo.ui.t = new Date();
-				document.body.style.removeProperty("cursor");
+				//document.body.style.removeProperty("cursor");
+				mo.viewport.style.removeProperty("cursor");
 				mo.ui.els.forEach(el => {el.style.removeProperty("opacity")})
 			}
 		}
@@ -250,7 +253,8 @@ function moUIFade(mo) {
 			if(mo.active === true) {
 				let x = new Date();
 				if(mo.ui.t.getTime() + 1000 < x.getTime()) {
-					document.body.style.cursor = "none";
+					//document.body.style.cursor = "none";
+					mo.viewport.style.cursor = "none";
 					mo.ui.els.forEach(el => {el.style.opacity = "0"})
 				}
 			}
